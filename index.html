@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARIA — Multi-Agent AI System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #7c6aff;
+    --accent2: #ff6a9e;
+    --accent3: #6affda;
+    --text: #e8e8f0;
+    --text-dim: #6b6b80;
+    --task: #7c6aff;
+    --calendar: #ff6a9e;
+    --notes: #6affda;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Header */
+  header {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .agents-status {
+    display: flex;
+    gap: 10px;
+  }
+
+  .agent-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+
+  .badge-task { color: var(--task); border-color: var(--task); background: rgba(124,106,255,0.08); }
+  .badge-cal { color: var(--calendar); border-color: var(--calendar); background: rgba(255,106,158,0.08); }
+  .badge-notes { color: var(--notes); border-color: var(--notes); background: rgba(106,255,218,0.08); }
+
+  /* Main layout */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 220px;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    padding: 20px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-title {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+
+  .quick-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .quick-btn:hover {
+    border-color: var(--accent);
+    background: rgba(124,106,255,0.08);
+    color: var(--accent);
+  }
+
+  .quick-btn .icon { font-size: 14px; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+  }
+
+  /* Chat area */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* Welcome screen */
+  .welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 16px;
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 0.8s ease forwards;
+  }
+
+  .welcome-icon {
+    font-size: 48px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .welcome h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .welcome p {
+    color: var(--text-dim);
+    font-size: 13px;
+    max-width: 400px;
+    line-height: 1.6;
+  }
+
+  .welcome-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .chip:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+
+  /* Messages */
+  .message {
+    display: flex;
+    gap: 12px;
+    animation: slideIn 0.3s ease;
+  }
+
+  .message.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .avatar.ai { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+  .avatar.user-av { background: var(--surface2); border: 1px solid var(--border); }
+
+  .bubble {
+    max-width: 70%;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .message.ai .bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+  }
+
+  .message.user .bubble {
+    background: linear-gradient(135deg, rgba(124,106,255,0.2), rgba(255,106,158,0.1));
+    border: 1px solid rgba(124,106,255,0.3);
+    border-top-right-radius: 4px;
+    color: var(--text);
+  }
+
+  /* Agent tag */
+  .agent-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .tag-task { background: rgba(124,106,255,0.15); color: var(--task); border: 1px solid rgba(124,106,255,0.3); }
+  .tag-calendar { background: rgba(255,106,158,0.15); color: var(--calendar); border: 1px solid rgba(255,106,158,0.3); }
+  .tag-notes { background: rgba(106,255,218,0.15); color: var(--notes); border: 1px solid rgba(106,255,218,0.3); }
+  .tag-primary { background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
+
+  /* Actions taken */
+  .actions-box {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+  }
+
+  .actions-title {
+    color: var(--text-dim);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .action-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent3);
+    padding: 2px 0;
+  }
+
+  .action-item::before { content: "▸"; opacity: 0.6; }
+
+  /* Typing indicator */
+  .typing {
+    display: flex;
+    gap: 4px;
+    padding: 14px 18px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    border-top-left-radius: 4px;
+    width: fit-content;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Input area */
+  .input-area {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .input-box {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    transition: border-color 0.2s;
+  }
+
+  .input-box:focus-within { border-color: var(--accent); }
+
+  textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    resize: none;
+    max-height: 120px;
+    line-height: 1.6;
+  }
+
+  textarea::placeholder { color: var(--text-dim); }
+
+  .send-btn {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { transform: scale(1.05); opacity: 0.9; }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .input-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🤖</div>
+    <div>
+      <div class="logo-text">ARIA</div>
+      <div class="logo-sub">Multi-Agent AI System</div>
+    </div>
+  </div>
+  <div class="agents-status">
+    <span class="agent-badge badge-task">⚡ Tasks</span>
+    <span class="agent-badge badge-cal">📅 Calendar</span>
+    <span class="agent-badge badge-notes">📝 Notes</span>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-title">Quick Actions</div>
+    <button class="quick-btn" onclick="sendQuick('Create a high priority task to prepare demo slides by April 7')">
+      <span class="icon">⚡</span> Create Task
+    </button>
+    <button class="quick-btn" onclick="sendQuick('Schedule a team meeting tomorrow at 10am to 11am')">
+      <span class="icon">📅</span> Add Event
+    </button>
+    <button class="quick-btn" onclick="sendQuick('Save a note about our multi-agent system')">
+      <span class="icon">📝</span> Save Note
+    </button>
+    <div class="divider"></div>
+    <div class="sidebar-title">Queries</div>
+    <button class="quick-btn" onclick="sendQuick('Show all my pending tasks')">
+      <span class="icon">📋</span> List Tasks
+    </button>
+    <button class="quick-btn" onclick="sendQuick('Show all upcoming events')">
+      <span class="icon">🗓️</span> List Events
+    </button>
+    <button class="quick-btn" onclick="sendQuick('List all my notes')">
+      <span class="icon">🗒️</span> List Notes
+    </button>
+  </div>
+
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">🤖</div>
+        <h2>Hello, I'm ARIA</h2>
+        <p>Your AI-powered multi-agent assistant. I can manage your tasks, schedule events, and save notes — all through natural language.</p>
+        <div class="welcome-chips">
+          <div class="chip" onclick="sendQuick('Create a task to review hackathon project')">📌 Create a task</div>
+          <div class="chip" onclick="sendQuick('Schedule a meeting tomorrow at 2pm')">📅 Schedule meeting</div>
+          <div class="chip" onclick="sendQuick('Save a note about project ideas')">📝 Save a note</div>
+          <div class="chip" onclick="sendQuick('Show all my pending tasks')">📋 Show tasks</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-box">
+        <textarea id="input" placeholder="Ask me to create tasks, schedule events, save notes..." rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+      </div>
+      <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = 'http://127.0.0.1:8000/agent/chat';
+  const SESSION_ID = 'ui_session_' + Date.now();
+  let isLoading = false;
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function sendQuick(text) {
+    document.getElementById('input').value = text;
+    sendMessage();
+  }
+
+  function getAgentTag(agent) {
+    if (!agent) return '';
+    const a = agent.toLowerCase();
+    if (a.includes('task')) return '<div class="agent-tag tag-task">⚡ Task Agent</div>';
+    if (a.includes('calendar')) return '<div class="agent-tag tag-calendar">📅 Calendar Agent</div>';
+    if (a.includes('notes')) return '<div class="agent-tag tag-notes">📝 Notes Agent</div>';
+    return '<div class="agent-tag tag-primary">🤖 Primary Agent</div>';
+  }
+
+  function formatResponse(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('input');
+    const text = input.value.trim();
+    if (!text || isLoading) return;
+
+    // Hide welcome
+    const welcome = document.getElementById('welcome');
+    if (welcome) welcome.style.display = 'none';
+
+    // Add user message
+    addMessage(text, 'user');
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Show typing
+    const typingId = showTyping();
+    isLoading = true;
+    document.getElementById('sendBtn').disabled = true;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, session_id: SESSION_ID })
+      });
+      const data = await res.json();
+      removeTyping(typingId);
+      addAIMessage(data);
+    } catch (err) {
+      removeTyping(typingId);
+      addMessage('⚠️ Could not connect to server. Make sure uvicorn is running at port 8000.', 'ai');
+    }
+
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+    input.focus();
+  }
+
+  function addMessage(text, role) {
+    const messages = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+    div.innerHTML = `
+      <div class="avatar ${role === 'ai' ? 'ai' : 'user-av'}">${role === 'ai' ? '🤖' : '👤'}</div>
+      <div class="bubble">${formatResponse(text)}</div>
+    `;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function addAIMessage(data) {
+    const messages = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'message ai';
+
+    const actions = data.actions_taken || [];
+    const actionsHtml = actions.length > 0 ? `
+      <div class="actions-box">
+        <div class="actions-title">Actions Taken</div>
+        ${actions.map(a => `<div class="action-item">${a.tool}(${JSON.stringify(a.input).slice(0,60)}...)</div>`).join('')}
+      </div>
+    ` : '';
+
+    div.innerHTML = `
+      <div class="avatar ai">🤖</div>
+      <div class="bubble">
+        ${getAgentTag(data.agent_used)}
+        ${formatResponse(data.response || 'Done!')}
+        ${actionsHtml}
+      </div>
+    `;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function showTyping() {
+    const messages = document.getElementById('messages');
+    const id = 'typing_' + Date.now();
+    const div = document.createElement('div');
+    div.className = 'message ai';
+    div.id = id;
+    div.innerHTML = `
+      <div class="avatar ai">🤖</div>
+      <div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    `;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return id;
+  }
+
+  function removeTyping(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  document.getElementById('input').focus();
+</script>
+</body>
+</html>
